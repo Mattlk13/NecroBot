@@ -12,7 +12,6 @@ using POGOProtos.Map.Pokemon;
 using POGOProtos.Networking.Responses;
 using System.Collections.Generic;
 
-
 #endregion
 
 namespace PoGo.NecroBot.Logic.Tasks
