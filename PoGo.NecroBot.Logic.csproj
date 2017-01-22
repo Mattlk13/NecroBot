@@ -529,7 +529,7 @@
       <Name>PokemonGo.RocketAPI</Name>
     </ProjectReference>
     <ProjectReference Include="..\POGOProtos\POGOProtos.csproj">
-      <Project>{fed6ec35-c1a9-48d4-b662-0265ce0a4b34}</Project>
+      <Project>{a03a7bb2-4f0b-467b-84b2-9a76e6aae6fb}</Project>
       <Name>POGOProtos</Name>
     </ProjectReference>
   </ItemGroup>
