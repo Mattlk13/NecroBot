@@ -421,6 +421,7 @@ namespace PoGo.NecroBot.Logic.Tasks
                     });
                     if (fortSearch.Result == FortSearchResponse.Types.Result.Success)
                     {
+                        mapEmptyCount = 0;
                         foreach (var item in fortSearch.ItemsAwarded)
                         {
                             await session.Inventory.UpdateInventoryItem(item.ItemId, item.ItemCount);
@@ -545,12 +546,11 @@ namespace PoGo.NecroBot.Logic.Tasks
                         ( // Make sure PokeStop is within 40 meters or else it is pointless to hit it
                             LocationUtils.CalculateDistanceInMeters(
                                 session.Client.CurrentLatitude, session.Client.CurrentLongitude,
-                                i.Latitude, i.Longitude) < 40) ||
-                        session.LogicSettings.MaxTravelDistanceInMeters == 0
+                                i.Latitude, i.Longitude) <= 40)
                 ).ToList(),
                 mapObjects.Where(p => p.Type == FortType.Gym && LocationUtils.CalculateDistanceInMeters(
                                 session.Client.CurrentLatitude, session.Client.CurrentLongitude,
-                                p.Latitude, p.Longitude) < 40).ToList()
+                                p.Latitude, p.Longitude) <= 40).ToList()
                 );
         }
 
@@ -567,9 +567,8 @@ namespace PoGo.NecroBot.Logic.Tasks
                         i.CooldownCompleteTimestampMs < DateTime.UtcNow.ToUnixTime() &&
                         (
                             LocationUtils.CalculateDistanceInMeters(
-                                session.Client.CurrentLatitude, session.Client.CurrentLongitude,
-                                i.Latitude, i.Longitude) < session.LogicSettings.MaxTravelDistanceInMeters) ||
-                        session.LogicSettings.MaxTravelDistanceInMeters == 0
+                                session.Settings.DefaultLatitude, session.Settings.DefaultLongitude,
+                                i.Latitude, i.Longitude) <= session.LogicSettings.MaxTravelDistanceInMeters)
                 );
 
             return pokeStops.ToList();

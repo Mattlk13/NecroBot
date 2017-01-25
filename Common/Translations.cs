@@ -311,7 +311,8 @@ namespace PoGo.NecroBot.Logic.Common
         TelegramCommandTopMsgHead,
         TelegramCommandLocMsgHead,
         TelegramCommandProfileMsgBody,
-        TelegramCommandStatusMsgBody
+        TelegramCommandStatusMsgBody,
+        MultiAccountAutoSelect
     }
 
     public class Translation : ITranslation
@@ -324,7 +325,9 @@ namespace PoGo.NecroBot.Logic.Common
         //Default Translations (ENGLISH)        
         private readonly List<KeyValuePair<TranslationString, string>> _translationStrings = new List
             <KeyValuePair<TranslationString, string>>
-            {   new KeyValuePair<TranslationString, string>(TranslationString.WebSocketStarted, "Websocket listening on at  wss://localhost:{0} or ws://localhost:{1} "),
+            {
+                new KeyValuePair<TranslationString, string>(TranslationString.MultiAccountAutoSelect, "PLEASE SELECT AN ACCOUNT TO START. AUTO START AFTER {0} SECOND"),
+                new KeyValuePair<TranslationString, string>(TranslationString.WebSocketStarted, "Websocket listening on at  wss://localhost:{0} or ws://localhost:{1} "),
                 new KeyValuePair<TranslationString, string>(TranslationString.TargetLocationSet,
                     "Target location [{0},{1}] has been accepted. Bot will go there soon."),
                 new KeyValuePair<TranslationString, string>(TranslationString.Pokeball, "PokeBall"),
@@ -762,7 +765,7 @@ namespace PoGo.NecroBot.Logic.Common
                 new KeyValuePair<TranslationString, string>(TranslationString.HumanWalkSnipeDestinationReached,
                     "(HUMAN WALK) destination reached | lat: {0}, lng: {1} | wait :{2:0.00} sec"),
                 new KeyValuePair<TranslationString, string>(TranslationString.HumanWalkSnipeNotEnoughtBalls,
-                    "(HUMAN WALK) Not enought balls to activate catch Em-All mode. ({0})/{1}"),
+                    "(HUMAN WALK) Not enough balls to activate catch Em-All mode. ({0})/{1}"),
                 new KeyValuePair<TranslationString, string>(TranslationString.HumanWalkSnipePokemonEncountered,
                     "(HUMAN WALK) Encountered {0}  | lat :{1} , Lng : {2} | removed from snipping list"),
                 new KeyValuePair<TranslationString, string>(TranslationString.MinimumClientVersionException,
