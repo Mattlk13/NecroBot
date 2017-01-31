@@ -17,9 +17,9 @@ using POGOProtos.Map.Fort;
 using PoGo.NecroBot.Logic.Utils;
 using PokemonGo.RocketAPI.Extensions;
 using System.Net;
+using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using System.Diagnostics;
 
 #endregion
 
@@ -28,7 +28,7 @@ namespace PoGo.NecroBot.Logic
     //add delegate
     public delegate void GetHumanizeRouteDelegate(List<GeoCoordinate> route, GeoCoordinate destination, List<FortData> pokeStops);
 
-    public delegate void UpdatePositionDelegate(double lat, double lng);
+    public delegate void UpdatePositionDelegate(ISession session, double lat, double lng);
 
     public class Navigation
     {
