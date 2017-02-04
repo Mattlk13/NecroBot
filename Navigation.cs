@@ -16,9 +16,9 @@ using GeoCoordinatePortable;
 using POGOProtos.Map.Fort;
 using PoGo.NecroBot.Logic.Utils;
 using PokemonGo.RocketAPI.Extensions;
+using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Diagnostics;
-using Newtonsoft.Json.Linq;
 using System.IO;
 
 #endregion
@@ -105,6 +105,7 @@ namespace PoGo.NecroBot.Logic
             CancellationToken cancellationToken, double customWalkingSpeed = 0.0)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            TinyIoC.TinyIoCContainer.Current.Resolve<MultiAccountManager>().ThrowIfSwitchAccountRequested();
 
             //add routes to map
             var points = new List<GeoCoordinate>();
