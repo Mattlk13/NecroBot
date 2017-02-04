@@ -4,12 +4,10 @@ using POGOProtos.Settings.Master;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoGo.NecroBot.Logic.State
 {
-    public class GymTeamState: IDisposable
+    public class GymTeamState : IDisposable
     {
         public List<MyPokemonStat> myPokemons { get; private set; }
 
@@ -19,14 +17,18 @@ namespace PoGo.NecroBot.Logic.State
 
         public IEnumerable<MoveSettings> moveSettings { get; set; }
 
+        public long TimeToDodge { get; set; }
+        public long LastWentDodge { get; set; }
+
         public GymTeamState()
         {
             myTeam = new List<GymPokemon>();
             myPokemons = new List<MyPokemonStat>();
             otherDefenders = new List<AnyPokemonStat>();
+            TimeToDodge = 0;
         }
 
-        public void addPokemon(ISession session, PokemonData pokemon, bool isMine=true)
+        public void addPokemon(ISession session, PokemonData pokemon, bool isMine = true)
         {
             if (isMine && myPokemons.Any(a => a.data.Id == pokemon.Id))
                 return;
@@ -51,6 +53,7 @@ namespace PoGo.NecroBot.Logic.State
 
         public void LoadMyPokemons(ISession session)
         {
+            myPokemons.Clear();
             foreach (var pokemon in session.Inventory.GetPokemons().Where(w => w.Cp >= session.LogicSettings.GymConfig.MinCpToUseInAttack))
             {
                 MyPokemonStat mps = new MyPokemonStat(session, pokemon);
@@ -83,7 +86,7 @@ namespace PoGo.NecroBot.Logic.State
         }
     }
 
-    public class AnyPokemonStat: IDisposable
+    public class AnyPokemonStat : IDisposable
     {
         public PokemonData data { get; set; }
 
@@ -119,12 +122,12 @@ namespace PoGo.NecroBot.Logic.State
         }
     }
 
-    public class MyPokemonStat: AnyPokemonStat
+    public class MyPokemonStat : AnyPokemonStat
     {
 
         public Dictionary<POGOProtos.Enums.PokemonType, int> TypeFactor { get; private set; }
 
-        public MyPokemonStat(ISession session, PokemonData pokemon): base(session, pokemon)
+        public MyPokemonStat(ISession session, PokemonData pokemon) : base(session, pokemon)
         {
             TypeFactor = new Dictionary<POGOProtos.Enums.PokemonType, int>();
 
@@ -161,7 +164,7 @@ namespace PoGo.NecroBot.Logic.State
             return factor;
         }
 
-        public int getFactorAgainst(ISession session, int cp)
+        public int getFactorAgainst(ISession session, int cp, bool isTraining)
         {
             decimal percent = 0.0M;
             if (cp > data.Cp)
@@ -169,13 +172,16 @@ namespace PoGo.NecroBot.Logic.State
             else
                 percent = (decimal)cp / (decimal)data.Cp * 100.0M;
 
-            int factor = (int)((100.0M - Math.Abs(percent)) / 10.0M) * Math.Sign(percent);
+            int factor = (int)((100.0M - Math.Abs(percent)) / 5.0M) * Math.Sign(percent);
+
+            if (isTraining)
+                factor *= -1;
 
             if (session.LogicSettings.GymConfig.NotUsedSkills.Any(a => a.Key == data.PokemonId && a.Value == Attack.MovementId))
-                factor -= 3;
+                factor -= 6;
 
             if (session.LogicSettings.GymConfig.NotUsedSkills.Any(a => a.Key == data.PokemonId && a.Value == SpecialAttack.MovementId))
-                factor -= 3;
+                factor -= 6;
 
             return factor;
         }
@@ -188,12 +194,12 @@ namespace PoGo.NecroBot.Logic.State
         }
 
         // jjskuld - Ignore CS0108 warning for now.
-        #pragma warning disable 0108
+#pragma warning disable 0108
         public void Dispose()
         {
             if (TypeFactor != null)
                 TypeFactor.Clear();
         }
-        #pragma warning restore 0108
+#pragma warning restore 0108
     }
 }

@@ -29,7 +29,7 @@ namespace PoGo.NecroBot.Logic.Model.Settings
 
         public int GenRandom(int val)
         {
-            double min = 0.9 * val;
+            double min = val - (_settings.PlayerConfig.RandomizeSettingsByPercent / 100.0 * val);
             int newVal = (int)Math.Floor(GenRandom(min, val));
             if (newVal < 0)
                 newVal = 0;
@@ -38,7 +38,7 @@ namespace PoGo.NecroBot.Logic.Model.Settings
 
         public double GenRandom(double val)
         {
-            double min = 0.9 * val;
+            double min = val - (_settings.PlayerConfig.RandomizeSettingsByPercent / 100.0 * val);
             double newVal = GenRandom(min, val);
             if (newVal < 0)
                 newVal = 0;
@@ -47,7 +47,7 @@ namespace PoGo.NecroBot.Logic.Model.Settings
 
         public float GenRandom(float val)
         {
-            double min = 0.9 * val;
+            double min = val - (_settings.PlayerConfig.RandomizeSettingsByPercent / 100.0 * val);
             double newVal = GenRandom(min, val);
             if (newVal < 0)
                 newVal = 0;
@@ -65,6 +65,7 @@ namespace PoGo.NecroBot.Logic.Model.Settings
         public int OutOfBallCatchBlockTime => GenRandom(_settings.PokemonConfig.OutOfBallCatchBlockTime);
         public int PokeballsToKeepForSnipe => GenRandom(_settings.PokemonConfig.PokeballToKeepForSnipe);
         public double AutoSnipeMaxDistance => GenRandom(_settings.SnipeConfig.AutoSnipeMaxDistance);
+        public int AutoSnipeBatchSize => _settings.SnipeConfig.AutoSnipeBatchSize;
         public int CatchPokemonLimit => GenRandom(_settings.PokemonConfig.CatchPokemonLimit);
         public int CatchPokemonLimitMinutes => GenRandom(_settings.PokemonConfig.CatchPokemonLimitMinutes);
         public int PokeStopLimit => GenRandom(_settings.PokeStopConfig.PokeStopLimit);

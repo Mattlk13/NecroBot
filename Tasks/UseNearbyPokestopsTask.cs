@@ -50,7 +50,7 @@ namespace PoGo.NecroBot.Logic.Tasks
         public static async Task Execute(ISession session, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
+            TinyIoC.TinyIoCContainer.Current.Resolve<MultiAccountManager>().ThrowIfSwitchAccountRequested();
             //request map objects to referesh data. keep all fort in session
 
             var mapObjectTupe = await GetPokeStops(session);
@@ -128,7 +128,7 @@ namespace PoGo.NecroBot.Logic.Tasks
                 var eggWalker = new EggWalker(1000, session);
 
                 cancellationToken.ThrowIfCancellationRequested();
-
+                TinyIoC.TinyIoCContainer.Current.Resolve<MultiAccountManager>().ThrowIfSwitchAccountRequested();
                 // Always set the fort info in base walk strategy.
 
                 var pokeStopDestination = new FortLocation(pokeStop.Latitude, pokeStop.Longitude,
@@ -363,6 +363,8 @@ namespace PoGo.NecroBot.Logic.Tasks
             do
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                TinyIoC.TinyIoCContainer.Current.Resolve<MultiAccountManager>().ThrowIfSwitchAccountRequested();
+
 
                 fortSearch =
                     await session.Client.Fort.SearchFort(pokeStop.Id, pokeStop.Latitude, pokeStop.Longitude);
