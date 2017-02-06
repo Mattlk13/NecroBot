@@ -16,6 +16,7 @@ using POGOProtos.Networking.Responses;
 using PoGo.NecroBot.Logic.Model;
 using PoGo.NecroBot.Logic.Exceptions;
 using PoGo.NecroBot.Logic.Model.Settings;
+using TinyIoC;
 
 #endregion
 
@@ -92,20 +93,29 @@ namespace PoGo.NecroBot.Logic.Tasks
 
         private static async Task CheckLimit(ISession session)
         {
+            bool allowSwitch = TinyIoCContainer.Current.Resolve<MultiAccountManager>().AllowSwitch();
             var multiConfig = session.LogicSettings.MultipleBotConfig;
 
-            if (session.Stats.CatchThresholdExceeds(session, false) && multiConfig.SwitchOnCatchLimit && session.LogicSettings.AllowMultipleBot)
+            if (session.Stats.CatchThresholdExceeds(session, false) && 
+                multiConfig.SwitchOnCatchLimit && 
+                session.LogicSettings.AllowMultipleBot &&
+                allowSwitch)
             {
                 throw new ActiveSwitchByRuleException(SwitchRules.CatchLimitReached, session.LogicSettings.CatchPokemonLimit);
             }
-            if (session.Stats.SearchThresholdExceeds(session, false) && multiConfig.SwitchOnPokestopLimit && session.LogicSettings.AllowMultipleBot)
+            if (session.Stats.SearchThresholdExceeds(session, false) && 
+                multiConfig.SwitchOnPokestopLimit && 
+                session.LogicSettings.AllowMultipleBot && 
+                allowSwitch)
             {
                 throw new ActiveSwitchByRuleException(SwitchRules.SpinPokestopReached, session.LogicSettings.PokeStopLimit);
             }
 
-            if (session.Stats.CatchThresholdExceeds(session, false) && session.Stats.SearchThresholdExceeds(session, false))
+            if (session.Stats.CatchThresholdExceeds(session, false) && 
+                session.Stats.SearchThresholdExceeds(session, false) 
+                )
             {
-                if (session.LogicSettings.AllowMultipleBot)
+                if (session.LogicSettings.AllowMultipleBot && allowSwitch)
                 {
                     throw new ActiveSwitchByRuleException(SwitchRules.SpinPokestopReached, session.LogicSettings.PokeStopLimit);
                 }
@@ -189,15 +199,17 @@ namespace PoGo.NecroBot.Logic.Tasks
 
             var forts = session.Forts
                 .Where(p => p.CooldownCompleteTimestampMs < DateTime.UtcNow.ToUnixTime())
-                .Where(f => f.Type == FortType.Checkpoint ||
+                .Where(f => f.Type == FortType.Checkpoint || 
+                       (session.LogicSettings.GymConfig.Enable && (
                             UseGymBattleTask.CanAttackGym(session, f, deployedPokemons) ||
                             UseGymBattleTask.CanTrainGym(session, f, null, deployedPokemons) ||
-                            UseGymBattleTask.CanDeployToGym(session, f, null, deployedPokemons))
+                            UseGymBattleTask.CanDeployToGym(session, f, null, deployedPokemons))))
                 .ToList();
 
-            if ((session.LogicSettings.GymConfig.EnableAttackGym && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanAttackGym(session, w, deployedPokemons)).Count() == 0) ||
+            if (session.LogicSettings.GymConfig.Enable &&
+                ((session.LogicSettings.GymConfig.EnableAttackGym && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanAttackGym(session, w, deployedPokemons)).Count() == 0) ||
                 (session.LogicSettings.GymConfig.EnableGymTraining && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanTrainGym(session, w, null, deployedPokemons)).Count() == 0)
-                )
+                ))
             {
                 //Logger.Write("No usable gym found. Trying to refresh list.", LogLevel.Gym, ConsoleColor.Magenta);
                 await GetPokeStops(session);
@@ -231,13 +243,22 @@ namespace PoGo.NecroBot.Logic.Tasks
 
                 // Return the first gym in range.
                 if (gyms.Count() > 0)
+ {
+                    gyms.OrderBy(p => p.GymPoints);
                     return gyms.FirstOrDefault();
-            }
+                }
 
+  }
             if (forts.Count == 1)
                 return forts.FirstOrDefault();
 
+if (forts.Count < 4)
             return forts.Skip((int)DateTime.Now.Ticks % 2).FirstOrDefault();
+else
+            {
+                Random rnd = new Random();
+                return forts.Skip(rnd.Next(0,3)).FirstOrDefault();
+            }
         }
 
         public static async Task SpinPokestopNearBy(ISession session, CancellationToken cancellationToken, FortData destinationFort = null)
@@ -470,7 +491,8 @@ namespace PoGo.NecroBot.Logic.Tasks
                     //only check if PokestopSoftbanCount > 0
                     if (MultipleBotConfig.IsMultiBotActive(session.LogicSettings) &&
                         session.LogicSettings.MultipleBotConfig.PokestopSoftbanCount > 0 &&
-                        session.LogicSettings.MultipleBotConfig.PokestopSoftbanCount <= softbanCount)
+                        session.LogicSettings.MultipleBotConfig.PokestopSoftbanCount <= softbanCount &&
+                        TinyIoCContainer.Current.Resolve<MultiAccountManager>().AllowSwitch())
                     {
                         softbanCount = 0;
 
@@ -520,7 +542,9 @@ namespace PoGo.NecroBot.Logic.Tasks
                         Message = session.Translation.GetTranslation(TranslationString.FarmPokestopsNoUsableFound)
                     });
                     mapEmptyCount++;
-                    if (mapEmptyCount == 5 && session.LogicSettings.AllowMultipleBot)
+                    if (mapEmptyCount == 5 && 
+                        session.LogicSettings.AllowMultipleBot &&
+                        TinyIoCContainer.Current.Resolve<MultiAccountManager>().AllowSwitch())
                     {
                         mapEmptyCount = 0;
                         throw new ActiveSwitchByRuleException() { MatchedRule = SwitchRules.EmptyMap, ReachedValue = 5 };
