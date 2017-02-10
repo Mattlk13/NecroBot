@@ -243,22 +243,10 @@ namespace PoGo.NecroBot.Logic.Tasks
 
                 // Return the first gym in range.
                 if (gyms.Count() > 0)
- {
-                    gyms.OrderBy(p => p.GymPoints);
                     return gyms.FirstOrDefault();
-                }
-
-  }
-            if (forts.Count == 1)
-                return forts.FirstOrDefault();
-
-if (forts.Count < 4)
-            return forts.Skip((int)DateTime.Now.Ticks % 2).FirstOrDefault();
-else
-            {
-                Random rnd = new Random();
-                return forts.Skip(rnd.Next(0,3)).FirstOrDefault();
             }
+
+            return forts.FirstOrDefault();
         }
 
         public static async Task SpinPokestopNearBy(ISession session, CancellationToken cancellationToken, FortData destinationFort = null)
@@ -472,7 +460,6 @@ else
                         Logger.Write($"(POKESTOP LIMIT) {session.Stats.GetNumPokestopsInLast24Hours()}/{session.LogicSettings.PokeStopLimit}",
                             LogLevel.Info, ConsoleColor.Yellow);
                     }
-
                     //add pokeStops to Map
                     OnLootPokestopEvent(pokeStop);
                     //end pokeStop to Map
@@ -602,7 +589,7 @@ else
 
             return pokeStops.ToList();
         }
-        //add delegate event
+		        //add delegate event
         private static void OnLootPokestopEvent(FortData pokestop)
         {
             LootPokestopEvent?.Invoke(pokestop);
