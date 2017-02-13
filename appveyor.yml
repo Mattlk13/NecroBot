@@ -10,15 +10,15 @@ before_build:
 
     nuget restore -OutputDirectory packages
 
-    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
-
-    sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
-
     sed -i "s#$(SolutionDir)#.#g" PokemonGo.RocketAPI.csproj
 
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git PokemonGo.RocketAPI
 
     sed -i "s#$(SolutionDir)#..#g" PokemonGo.RocketAPI/PokemonGo.RocketAPI.csproj
+
+    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
+
+    sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
 build:
   project: PoGo.NecroBot.Logic.csproj
   verbosity: minimal
