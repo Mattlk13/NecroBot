@@ -9,8 +9,6 @@ before_build:
 - cmd: >-
     sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
 
-    nuget restore -OutputDirectory packages
-    
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
     
     sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
@@ -18,5 +16,6 @@ before_build:
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
     
     sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
+    nuget restore -OutputDirectory packages
 build:
   verbosity: minimal
