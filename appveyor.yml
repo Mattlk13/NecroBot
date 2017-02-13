@@ -2,6 +2,7 @@ version: 1.0.{build}
 skip_tags: true
 configuration: Release
 platform: x86
+# environment variables
 environment:
   SolutionDirectory: .
 before_build:
@@ -18,5 +19,4 @@ before_build:
 
     sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
 build:
-  project: PoGo.NecroBot.Logic.csproj
   verbosity: minimal
