@@ -8,13 +8,15 @@ environment:
 before_build:
 - cmd: >-
     sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
+    
+    sed -i "s#$(SolutionDir)#.#g" PokemonGo.RocketAPI.csproj
 
     nuget restore -OutputDirectory packages
     
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
     
     sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
-    
+       
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
     
     sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
