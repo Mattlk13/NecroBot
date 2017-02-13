@@ -18,8 +18,8 @@ before_build:
     
     nuget restore -OutputDirectory packages
     
-    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
+    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git PokemonGo.RocketAPI
     
-    sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
+    sed -i "s#$(SolutionDir)#..#g" PokemonGo.RocketAPI/PokemonGo.RocketAPI.csproj
 build:
   verbosity: minimal
