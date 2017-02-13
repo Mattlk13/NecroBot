@@ -10,8 +10,6 @@ before_build:
 
     nuget restore -OutputDirectory packages
 
-    sed -i "s#$(SolutionDir)#.#g" PokemonGo.RocketAPI.csproj
-
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git PokemonGo.RocketAPI
 
     sed -i "s#$(SolutionDir)#..#g" PokemonGo.RocketAPI/PokemonGo.RocketAPI.csproj
