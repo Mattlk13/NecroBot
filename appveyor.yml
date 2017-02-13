@@ -2,11 +2,14 @@ version: 1.0.{build}
 skip_tags: true
 configuration: Release
 platform: x86
+# clone directory
+clone_folder: c:\projects\Logic
+#
 environment:
   SolutionDirectory: .
 before_build:
 - cmd: >-
-    sed -i "s#$(SolutionDir)#..#g" PoGo.NecroBot.Logic.csproj
+    sed -i "s#$(SolutionDir)#./PoGo.NecroBot.Logic#g" PoGo.NecroBot.Logic.csproj
 
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
 
