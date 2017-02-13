@@ -10,9 +10,17 @@ before_build:
 
     nuget restore -OutputDirectory packages
 
+    sed -i "s#$(SolutionDir)#.#g" POGOProtos.csproj
+
+    nuget restore -OutputDirectory packages
+
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
 
     sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
+
+    sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
+
+    nuget restore -OutputDirectory packages
 
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
 
