@@ -8,7 +8,7 @@ environment:
 before_build:
 - cmd: >-
     sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
-    sed -i "s#$(SolutionDir)#.#g" PokemonGo.RocketAPI.csproj
+#    sed -i "s#$(SolutionDir)#.#g" PokemonGo.RocketAPI.csproj
 
     nuget restore -OutputDirectory packages
     
@@ -16,7 +16,7 @@ before_build:
     
     sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
     
-    nuget restore -OutputDirectory packages
+#    nuget restore -OutputDirectory packages
     
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
     
