@@ -98,10 +98,16 @@ namespace PoGo.NecroBot.Logic
 
                     if (existing == null)
                     {
-                        BotAccount newAcc = new BotAccount(item);
-                        newAcc.Id = this.Accounts.Count == 0 ? 1 : this.Accounts.Max(x => x.Id) + 1;
-                        accountdb.Insert(newAcc);
-                        this.Accounts.Add(newAcc);
+                        try {
+                            BotAccount newAcc = new BotAccount(item);
+                            newAcc.Id = this.Accounts.Count == 0 ? 1 : this.Accounts.Max(x => x.Id) + 1;
+                            accountdb.Insert(newAcc);
+                            this.Accounts.Add(newAcc);
+                        }
+                        catch(Exception ex)
+                        {
+                            Logic.Logging.Logger.Write("Error while saving data into accounts.db, please delete account.db and restart bot to have it fully work in order");
+                        }
                     }
                 }
 
@@ -113,15 +119,23 @@ namespace PoGo.NecroBot.Logic
             return this.Accounts.OrderBy(x => x.RuntimeTotal).Where(x => x.ReleaseBlockTime < DateTime.Now).FirstOrDefault();
         }
 
-        public void Add(AuthConfig authConfig)
+        public BotAccount Add(AuthConfig authConfig)
         {
             SyncDatabase(new List<AuthConfig>() { authConfig });
+
+            return this.Accounts.Last();
         }
 
         public BotAccount GetStartUpAccount()
         {
-            runningAccount = GetMinRuntime();
             ISession session = TinyIoC.TinyIoCContainer.Current.Resolve<ISession>();
+
+            if (!session.LogicSettings.AllowMultipleBot)
+            {
+                runningAccount = Accounts.Last();
+            }
+            else
+            runningAccount = GetMinRuntime();
 
             if (session.LogicSettings.AllowMultipleBot
               && session.LogicSettings.MultipleBotConfig.SelectAccountOnStartUp)
