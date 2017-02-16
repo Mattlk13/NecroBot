@@ -383,10 +383,7 @@ namespace PoGo.NecroBot.Logic.Tasks
                     new GeoCoordinate(encounterId.Latitude, encounterId.Longitude, session.Client.CurrentAltitude),
                     0
                 );
-
-
-                await session.Client.Misc.RandomAPICall();
-
+                
                 //await session.Client.Map.GetMapObjects(true);
 
                 //await Task.Delay(1000, cancellationToken);
@@ -549,6 +546,8 @@ namespace PoGo.NecroBot.Logic.Tasks
             if (session.LogicSettings.SnipePokemonNotInPokedex)
             {
                 var pokedex = session.Inventory.GetPokeDexItems();
+
+                Logger.Debug($"Pokedex Entry : {pokedex.Count()}");
 
                 if (!pokedex.Exists(x => x.InventoryItemData?.PokedexEntry?.PokemonId == (PokemonId)item.PokemonId) &&
                     !pokedexSnipePokemons.Exists(p => p.PokemonId == item.PokemonId) &&

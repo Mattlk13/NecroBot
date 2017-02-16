@@ -198,18 +198,20 @@ namespace PoGo.NecroBot.Logic.Tasks
 
             var deployedPokemons = session.Inventory.GetDeployedPokemons();
 
+            //NOTE : This code is killing perfomance of BOT if GYM is turn on, need to refactor to avoid this hummer call API
+
             var forts = session.Forts
                 .Where(p => p.CooldownCompleteTimestampMs < DateTime.UtcNow.ToUnixTime())
                 .Where(f => f.Type == FortType.Checkpoint || 
                        (session.LogicSettings.GymConfig.Enable && (
                             UseGymBattleTask.CanAttackGym(session, f, deployedPokemons) ||
-                            UseGymBattleTask.CanTrainGym(session, f, null, deployedPokemons) ||
-                            UseGymBattleTask.CanDeployToGym(session, f, null, deployedPokemons))))
+                            UseGymBattleTask.CanTrainGym(session, f, deployedPokemons) ||
+                            UseGymBattleTask.CanDeployToGym(session, f, deployedPokemons))))
                 .ToList();
 
             if (session.LogicSettings.GymConfig.Enable &&
                 ((session.LogicSettings.GymConfig.EnableAttackGym && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanAttackGym(session, w, deployedPokemons)).Count() == 0) ||
-                (session.LogicSettings.GymConfig.EnableGymTraining && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanTrainGym(session, w, null, deployedPokemons)).Count() == 0)
+                (session.LogicSettings.GymConfig.EnableGymTraining && forts.Where(w => w.Type == FortType.Gym && UseGymBattleTask.CanTrainGym(session, w, deployedPokemons)).Count() == 0)
                 ))
             {
                 //Logger.Write("No usable gym found. Trying to refresh list.", LogLevel.Gym, ConsoleColor.Magenta);
@@ -245,6 +247,14 @@ namespace PoGo.NecroBot.Logic.Tasks
                 // Prioritize gyms over pokestops
                 var gyms = forts.Where(x => x.Type == FortType.Gym &&
                     LocationUtils.CalculateDistanceInMeters(x.Latitude, x.Longitude, session.Client.CurrentLatitude, session.Client.CurrentLongitude) < session.LogicSettings.GymConfig.MaxDistance);
+                    //.OrderBy(x => LocationUtils.CalculateDistanceInMeters(x.Latitude, x.Longitude, session.Client.CurrentLatitude, session.Client.CurrentLongitude));
+
+                if (session.LogicSettings.GymConfig.PrioritizeGymWithFreeSlot)
+                {
+                    var freeSlots = gyms.Where(w => w.OwnedByTeam == session.Profile.PlayerData.Team && UseGymBattleTask.CanDeployToGym(session, w, deployedPokemons));
+                    if (freeSlots.Count() > 0)
+                        return freeSlots.First();
+                } 
 
                 // Return the first gym in range.
                 if (gyms.Count() > 0)
@@ -365,36 +375,44 @@ namespace PoGo.NecroBot.Logic.Tasks
             var fortTry = 0; //Current check
             int retryNumber = session.LogicSettings.ByPassSpinCount; //How many times it needs to check to clear softban
             int zeroCheck = Math.Min(5, retryNumber); //How many times it checks fort before it thinks it's softban
+
+            var distance = LocationUtils.CalculateDistanceInMeters(pokeStop.Latitude, pokeStop.Longitude, session.Client.CurrentLatitude, session.Client.CurrentLongitude);
+            if (distance > 30)
+            {
+                await LocationUtils.UpdatePlayerLocationWithAltitude(session, new GeoCoordinatePortable.GeoCoordinate(pokeStop.Latitude, pokeStop.Longitude), 0);
+            }
+
             do
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 TinyIoC.TinyIoCContainer.Current.Resolve<MultiAccountManager>().ThrowIfSwitchAccountRequested();
                 int retry = 3;
+                double latitude = pokeStop.Latitude;
+                double longitude = pokeStop.Longitude;
                 do
                 {
-                    fortSearch =
-                        await session.Client.Fort.SearchFort(pokeStop.Id, pokeStop.Latitude, pokeStop.Longitude);
+                    fortSearch = await session.Client.Fort.SearchFort(pokeStop.Id, pokeStop.Latitude, pokeStop.Longitude);
                     if(fortSearch.Result == FortSearchResponse.Types.Result.OutOfRange)
                     {
-                        if(retry <2)
+                        if(retry>1)
                         {
-                            await session.Client.Map.GetMapObjects(true);
+                            await Task.Delay(500);
                         }
-                        var distance = LocationUtils.CalculateDistanceInMeters(pokeStop.Latitude, pokeStop.Longitude, session.Client.CurrentLatitude, session.Client.CurrentLongitude);
+                        else
+                        await session.Client.Map.GetMapObjects(true);
 #if DEBUG
-
-                        Logger.Write($"Loot pokestop result :{fortSearch.Result} , distance to pokestop : {distance:0.00}m");
+                        Logger.Write($"Loot pokestop result: {fortSearch.Result}, distance to pokestop: {distance:0.00}m, retry: #{4-retry}");
 #endif
-                        if (distance>30)
-                        {
-                            await LocationUtils.UpdatePlayerLocationWithAltitude(session, new GeoCoordinatePortable.GeoCoordinate(pokeStop.Latitude, pokeStop.Longitude), 0);
-                        }
+
+                        latitude += 0.000001;
+                        longitude += 0.000001;
+                        await LocationUtils.UpdatePlayerLocationWithAltitude(session, new GeoCoordinatePortable.GeoCoordinate(latitude, longitude), 0);
                         retry--;
                         //await session.Client.Map.GetMapObjects(true);
                     }
                 }
                 while (fortSearch.Result == FortSearchResponse.Types.Result.OutOfRange && retry >0);
-
+                Logger.Write($"Loot pokestop result: {fortSearch.Result}");
                 if (fortSearch.ExperienceAwarded > 0 && timesZeroXPawarded > 0) timesZeroXPawarded = 0;
                 if (fortSearch.ExperienceAwarded == 0 && fortSearch.Result != FortSearchResponse.Types.Result.InventoryFull)
                 {
