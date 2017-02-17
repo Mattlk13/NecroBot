@@ -1,14 +1,56 @@
-version: 1.0.0.{build}
-skip_tags: true
+#---------------------------------#
+#      general configuration      #
+#---------------------------------#
+
+# version format
+version: 0.0.0.{build}
+
+# Do not build on tags
+skip_tags: false
+
+# Start builds on tags only
+skip_non_tags: false
+
+# Skipping commits affecting specific files
+skip_commits:
+  files:
+  - '**\AssemblyInfo.*'
+  - 'CHANGELOG.md'
+
+# 
+pull_requests:
+  do_not_increment_build_number: true
+  
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+image: Visual Studio 2015
+
+# scripts that are called at very beginning, before repo cloning
+#init:
+
+# clone directory
+clone_folder: c:\projects\Logic\PoGo.Necrobot.Logic
+
 configuration: Release
 platform: x86
 # environment variables
 environment:
   SolutionDirectory: .
-install:
-- git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
-- git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
 before_build:
-  - nuget restore -OutputDirectory packages
+- cmd: >-
+    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
+    
+    sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
+    
+    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
+    
+    sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
+    
+    sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
+
+    nuget restore -OutputDirectory packages
 build:
   verbosity: minimal
