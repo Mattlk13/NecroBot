@@ -32,7 +32,7 @@ image: Visual Studio 2015
 #init:
 
 # clone directory
-clone_folder: c:\projects\Logic\PoGo.Necrobot.Logic
+clone_folder: c:\projects\Logic
 
 # scripts that run after cloning repository
 install:
