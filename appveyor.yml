@@ -34,6 +34,10 @@ image: Visual Studio 2015
 # clone directory
 clone_folder: c:\projects\Logic\PoGo.Necrobot.Logic
 
+# scripts that run after cloning repository
+install:
+- git submodule update --init --recursive
+
 configuration: Release
 platform: x86
 # environment variables
@@ -41,26 +45,6 @@ environment:
   SolutionDirectory: .
 before_build:
 - cmd: >-
-    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
-    
-    sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
-    
-    cd POGOProtos
-    
-    nuget restore -OutputDirectory packages
-    
-    cd ..
-
-    git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
-    
-    sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
-    
-    cd FeroxRev
-    
-    nuget restore -OutputDirectory packages
-    
-    cd ..
-    
     sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
 
     nuget restore -OutputDirectory packages
