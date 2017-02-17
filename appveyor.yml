@@ -50,8 +50,6 @@ before_build:
     nuget restore -OutputDirectory packages
     
     cd ..
-    
-    sed -i "s#$(SolutionDir)#.#g" PoGo.NecroBot.Logic.csproj
 
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
     
