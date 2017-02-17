@@ -9,6 +9,6 @@ install:
 - git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git POGOProtos
 - git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git FeroxRev
 before_build:
-  - nuget restore
+  - nuget restore -OutputDirectory packages
 build:
   verbosity: minimal
