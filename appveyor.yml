@@ -13,10 +13,10 @@ before_build:
     
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/POGOProtos.git ../POGOProtos
     
-    sed -i "s#$(SolutionDir)#../..#g" POGOProtos/POGOProtos.csproj
+    sed -i "s#$(SolutionDir)#..#g" POGOProtos/POGOProtos.csproj
     
     git clone -q --branch=master https://github.com/TheUnnamedOrganisation/FeroxRev.git ../FeroxRev
     
-    sed -i "s#$(SolutionDir)#../..#g" FeroxRev/PokemonGo.RocketAPI.csproj
+    sed -i "s#$(SolutionDir)#..#g" FeroxRev/PokemonGo.RocketAPI.csproj
 build:
   verbosity: minimal
