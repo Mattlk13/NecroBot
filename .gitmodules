@@ -1,7 +1,0 @@
-[submodule "FeroxRev"]
-	path = FeroxRev
-	url = https://github.com/TheUnnamedOrganisation/FeroxRev.git
-	branch = master
-[submodule "POGOProtos"]
-	path = POGOProtos
-	url = https://github.com/TheUnnamedOrganisation/POGOProtos.git
