@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PoGo.NecroBot.Logic.Model.Settings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,13 +14,22 @@ namespace PoGo.NecroBot.Logic.Common
     public class UITranslation
     {
         #region Main screen
+            
         [Description("Accounts")]
         public string AccountSetting { get; set; }
+        
         [Description("Map & Journey")]
         public string MapTabTitle { get; set; }
 
+        [Description("SNIPE")]
+        public string SnipeText { get; set; }
+
+        [Description("ALL BOT SNIPE")]
+        public string SnipeAllBotText { get; set; }
+
         [Description("Sniper")]
         public string SniperTabTitle { get; set; }
+        
         [Description("Bot switching account... ")]
         public string AccountSwitching { get; set; }
 
@@ -38,7 +48,6 @@ namespace PoGo.NecroBot.Logic.Common
         [Description("Switch")]
         public string Switch { get; set; }
 
-
         [Description("Hide Console")]
         public string HideConsole { get; set; }
 
@@ -47,6 +56,9 @@ namespace PoGo.NecroBot.Logic.Common
 
         [Description("Theme")]
         public string Theme { get; set; }
+        
+        [Description("Enter your command")]
+        public string InputCommand { get; set; }
 
         #endregion
         #region Map
@@ -54,16 +66,18 @@ namespace PoGo.NecroBot.Logic.Common
         [Description("Zoom In")]
         public string ZoomIn { get; set; }
 
-
         [Description("ZoomOut")]
         public string ZoomOut { get; set; }
 
         [Description("Clear map")]
         public string ClearMap { get; set; }
+        
         [Description("Walk Here")]
         public string WalkHere { get; set; }
+        
         #endregion
         #region snipe screen
+            
         [Description("100% IV")]
         public string TabSnipeIV100 { get; set; }
 
@@ -81,22 +95,49 @@ namespace PoGo.NecroBot.Logic.Common
 
         [Description("Add Manual Coordinate")]
         public string TabSnipeAddManualCoord { get; set; }
+        
         [Description("Snipe??")]
         public string SnipeButton { get; set; }
+        
         [Description("FreeInput")]
         public string FreeInput { get; set; }
 
         [Description("You can copy & paste any free text content which has pokemon name, latitude, longitude then bot will parse that content to get the snipe infomation.")]
-        public string FreeInputExplain{ get; set; }
+        public string FreeInputExplain { get; set; }
 
         [Description("Add To Snipe")]
         public string AddToSnipeButtonText { get; set; }
 
         #endregion
         #region Pokemon Inventory
+            
+        [Description("Search & Filters")]
+        public string FilterAndSearch { get; set; }
+
+        [Description("Pokedex")]
+        public string Pokedex { get; set; }
+        
+        [Description("Enter Pokemon Name")]
+        public string SearchPokemonName { get; set; }
+        
+        [Description("Select Pokemon %IV")]
+        public string SearchPokemonIV { get; set; }
+        
+        [Description("Select Pokemon Level")]
+        public string SearchPokemonLevel { get; set; }
+
+        [Description("Select Pokemon CP")]
+        public string SearchPokemonCP { get; set; }
+
+        [Description("Search & Select")]
+        public string SearchSelectAllButton { get; set; }
+
+        [Description("Search")]
+        public string SearchButton { get; set; }
 
         [Description("Do you want to powerup this pokemon? Normal power up is do x time power up. Max power up is powerup to maximun level up to your candy, stardust and player level.")]
         public string PowerUpDescription { get; set; }
+        
         [Description("Normal Power Up")]
         public string NormalPowerup { get; set; }
 
@@ -115,22 +156,17 @@ namespace PoGo.NecroBot.Logic.Common
         [Description("Name")]
         public string PokemonName { get; set; }
 
-
         [Description("HP")]
         public string HP { get; set; }
-
-
 
         [Description("Move1")]
         public string Move1 { get; set; }
 
-
         [Description("Move2")]
         public string Move2 { get; set; }
 
-
         [Description("IV")]
-        public string IV{ get; set; }
+        public string IV { get; set; }
 
         [Description("CP")]
         public string CP { get; set; }
@@ -140,15 +176,22 @@ namespace PoGo.NecroBot.Logic.Common
 
         [Description("Level")]
         public string Level { get; set; }
-        
+
         [Description("Caught at")]
         public string CaughtTime { get; set; }
 
         [Description("Location")]
         public string CaughtLocation { get; set; }
+        
+        [Description("Set Buddy")]
+        public string SetBuddy { get; set; }
+        
+        [Description("Actions")]
+        public string Actions { get; set; }
 
         #endregion
         #region Popup
+            
         [Description("Latitude")]
         public string Latitude { get; set; }
 
@@ -175,13 +218,21 @@ namespace PoGo.NecroBot.Logic.Common
 
         [Description("Pokestops: {0}")]
         public string PokestopLimit { get; set; }
+        
         [Description("Pokemons: {0}")]
         public string CatchLimit { get; set; }
+        
         [Description("Speed: {0:0.00} km/h")]
         public string WalkSpeed { get; set; }
+        
         [Description("Transfered: {0}")]
         public string PokemonTransfered { get; set; }
+        [Description("HIDE")]
+        public string Hide { get; set; }
+        [Description("SHOW")]
+        public string Show { get; set; }
         #endregion
+            
         private Dictionary<string, string> translations = new Dictionary<string, string>();
         private string languageCode = "en";
         private string translationFile = @"Config\Translations\ui.{0}.json";
@@ -197,9 +248,13 @@ namespace PoGo.NecroBot.Logic.Common
         public string GetTranslation(string key)
         {
             var prop = GetType().GetProperty(key);
-            if(prop != null)
+            if (prop != null)
             {
                 return prop.GetValue(this).ToString();
+            }
+            if(translations.ContainsKey(key))
+            {
+                return translations[key];
             }
             return $"{key} missing";
         }
@@ -211,7 +266,6 @@ namespace PoGo.NecroBot.Logic.Common
             {
                 if (translations.ContainsKey(item.Name)) continue;
                 translations.Add(item.Name, item.GetValue(this).ToString());
-
             }
 
             File.WriteAllText(this.translationFile, JsonConvert.SerializeObject(translations, Formatting.Indented));
@@ -230,7 +284,7 @@ namespace PoGo.NecroBot.Logic.Common
                     pi.SetValue(this, description.Description);
                 }
                 else
-                pi.SetValue(this, pi.Name);
+                    pi.SetValue(this, pi.Name);
             }
 
             if (File.Exists(translationFile))
@@ -250,9 +304,75 @@ namespace PoGo.NecroBot.Logic.Common
                     }
                 }
             }
-            Save();
+            //append translation for setting
+            Type setting = typeof(GlobalSettings);
+
+            foreach (var item in setting.GetFields())
+            {
+                var configAttibute = item.GetCustomAttribute<NecrobotConfigAttribute>();
+                if (configAttibute != null)
+                {
+                    var fileName = !string.IsNullOrEmpty(configAttibute.SheetName) ? configAttibute.SheetName : item.Name;
+
+                    string key = $"Setting.{item.Name}";
+                    var configType = item.FieldType;
+
+                    if (!translations.ContainsKey(key))
+                    {
+                        translations.Add(key, !string.IsNullOrEmpty(configAttibute.Key) ? configAttibute.Key : fileName);
+                    }
+                    var keyDesc = $"{key}Desc";
+
+                    if (!translations.ContainsKey(keyDesc))
+                    {
+                        translations.Add(keyDesc, !string.IsNullOrEmpty(configAttibute.Description) ? configAttibute.Description : $"{key} description");
+                    };
+                    if (item.FieldType.IsGenericType && (item.FieldType.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
+                    {
+                        Type keyType = item.FieldType.GetGenericArguments()[0];
+                        Type valueType = item.FieldType.GetGenericArguments()[1];
+                        AddResourceForType(key, valueType);
+                    }
+
+                    if (item.FieldType.IsGenericType && (item.FieldType.GetGenericTypeDefinition() == typeof(List<>)))
+                    {
+                        Type keyType = item.FieldType.GetGenericArguments()[0];
+                        AddResourceForType(key, keyType);
+                    }
+
+
+                    AddResourceForType(key, configType);
+                }
+
+                Save();
+
+            }
 
         }
 
+        private void AddResourceForType(string key, Type configType)
+        {
+            foreach (var configItem in configType.GetProperties())
+            {
+                var propAttibute = configItem.GetCustomAttribute<NecrobotConfigAttribute>();
+                if (propAttibute != null)
+                {
+                    string fieldValue = !string.IsNullOrEmpty(propAttibute.Key) ? propAttibute.Key : configItem.Name;
+
+                    var subKey = $"{key}.{configItem.Name}";
+                    var descKey = subKey + "Desc";
+
+                    if (!translations.ContainsKey(subKey))
+                    {
+                        translations.Add(subKey, string.IsNullOrEmpty(propAttibute.Key) ? fieldValue : propAttibute.Key);
+                    }
+
+                    if (!translations.ContainsKey(descKey))
+                    {
+                        translations.Add(descKey, !string.IsNullOrEmpty(propAttibute.Description) ? propAttibute.Description : $"{subKey} description");
+                    }
+                }
+            }
+        }
     }
 }

@@ -48,6 +48,7 @@ namespace PoGo.NecroBot.Logic.Tasks
 
         private static string _msniperServiceUrl = "https://www.msniper.com/signalr";
 
+        private static List<PokemonId> pokedexList = new List<PokemonId>();
         #endregion Variables
 
         #region signalr msniper service
@@ -200,6 +201,7 @@ namespace PoGo.NecroBot.Logic.Tasks
 
         public static void BlockSnipe()
         {
+            pokedexList = new List<PokemonId>();
             isBlocking = true;
         }
 
@@ -378,7 +380,7 @@ namespace PoGo.NecroBot.Logic.Tasks
             try
             {
                 // Speed set to 0 for random speed.
-                await LocationUtils.UpdatePlayerLocationWithAltitude(
+                LocationUtils.UpdatePlayerLocationWithAltitude(
                     session,
                     new GeoCoordinate(encounterId.Latitude, encounterId.Longitude, session.Client.CurrentAltitude),
                     0
@@ -393,14 +395,10 @@ namespace PoGo.NecroBot.Logic.Tasks
 
                 encounter = await session.Client.Encounter.EncounterPokemon(encounterId.EncounterId, encounterId.SpawnPointId);
 
-#if DEBUG
                 if (encounter != null && encounter.Status != EncounterResponse.Types.Status.EncounterSuccess)
                 {
-                    Debug.WriteLine($"{encounter}");
-
-                    Logger.Write($"{encounter}");
+                    Logger.Debug($"{encounter}");
                 }
-#endif
                 //pokemon has expired, send event to remove it.
                 if (encounter != null &&( encounter.Status == EncounterResponse.Types.Status.EncounterClosed|| 
                     encounter.Status == EncounterResponse.Types.Status.EncounterNotFound))
@@ -423,7 +421,7 @@ namespace PoGo.NecroBot.Logic.Tasks
                 {
                     //TODO - What if udpate location failed
                     // Speed set to 0 for random speed.
-                    var response = await LocationUtils.UpdatePlayerLocationWithAltitude(
+                    LocationUtils.UpdatePlayerLocationWithAltitude(
                         session,
                         new GeoCoordinate(lat, lon, session.Client.CurrentAltitude),
                         0
@@ -548,14 +546,19 @@ namespace PoGo.NecroBot.Logic.Tasks
             item.Iv = Math.Round(item.Iv, 2);
             if (session.LogicSettings.SnipePokemonNotInPokedex)
             {
-                var pokedex = session.Inventory.GetPokeDexItems();
+                //sometime the API return pokedex not correct, we need cahe this list, need lean everyetime peopellogi
+                var pokedex = session.Inventory.GetPokeDexItems().Select(x=>x.InventoryItemData?.PokedexEntry?.PokemonId).Where(x=>x != null).ToList();
+                var update = pokedex.Where(x => !pokedexList.Contains(x.Value)).ToList();
 
-                if (!pokedex.Exists(x => x.InventoryItemData?.PokedexEntry?.PokemonId == (PokemonId)item.PokemonId) &&
+                pokedexList.AddRange(update.Select(x=>x.Value));
+
+                Logger.Debug($"Pokedex Entry : {pokedexList.Count()}");
+
+                if (pokedexList.Count>0 && 
+                    !pokedexList.Exists(x => x == (PokemonId)item.PokemonId) &&
                     !pokedexSnipePokemons.Exists(p => p.PokemonId == item.PokemonId) &&
                     (!session.LogicSettings.AutosnipeVerifiedOnly ||
-                     (session.LogicSettings.AutosnipeVerifiedOnly &&
-                      (item.EncounterId > 0 || (item.Move1 != PokemonMove.MoveUnset &&
-                                                item.Move2 != PokemonMove.MoveUnset)))))
+                     (session.LogicSettings.AutosnipeVerifiedOnly && item.IsVerified() )))
                 {
                     session.EventDispatcher.Send(new WarnEvent()
                     {
@@ -756,7 +759,6 @@ namespace PoGo.NecroBot.Logic.Tasks
 
                     //var result = await CatchWithSnipe(session, location, cancellationToken);
 
-
                     if (result)
                     {
                         snipeFailedCount = 0;
@@ -766,7 +768,7 @@ namespace PoGo.NecroBot.Logic.Tasks
                         snipeFailedCount++;
                         if (snipeFailedCount >= 3) break; //maybe softban, stop snipe wait until verify it not been
                     }
-                    await Task.Delay(1000, cancellationToken);
+                    //await Task.Delay(1000, cancellationToken);
                     session.Stats.LastSnipeTime = DateTime.Now;
                     session.Stats.SnipeCount++;
                     waitNextPokestop = true;

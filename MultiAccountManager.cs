@@ -104,7 +104,7 @@ namespace PoGo.NecroBot.Logic
                             accountdb.Insert(newAcc);
                             this.Accounts.Add(newAcc);
                         }
-                        catch(Exception ex)
+                        catch(Exception)
                         {
                             Logic.Logging.Logger.Write("Error while saving data into accounts.db, please delete account.db and restart bot to have it fully work in order");
                         }
@@ -225,21 +225,25 @@ namespace PoGo.NecroBot.Logic
 
 
             var current = this.Accounts.FirstOrDefault(x => x.IsRunning);
-            if (current != null)
+            if (currentAccount != null)
             {
-                current.RuntimeTotal += (DateTime.Now - current.LoggedTime).TotalMinutes;
-                current.IsRunning = false;
+                currentAccount.RuntimeTotal += (DateTime.Now - currentAccount.LoggedTime).TotalMinutes;
+                currentAccount.IsRunning = false;
 
-                var playerStats = (session.Inventory.GetPlayerStats()).FirstOrDefault();
-                current.Level = playerStats.Level;
+                if (session.LoggedTime != DateTime.MinValue)
+                {
+                    var playerStats = (session.Inventory.GetPlayerStats()).FirstOrDefault();
+                    currentAccount.Level = playerStats.Level;
+                }
 
-                UpdateDatabase(current);
+                UpdateDatabase(currentAccount);
             }
 
             if (bot != null)
             {
                 
                 runningAccount = bot;
+                
             }
             else {
 
@@ -282,6 +286,12 @@ namespace PoGo.NecroBot.Logic
                     return GetSwitchableAccount();
                 }
             }
+            //overkill
+            foreach (var item in this.Accounts)
+            {
+                item.IsRunning = false;
+                UpdateDatabase(item);
+            }
             runningAccount.IsRunning = true;
             runningAccount.LoggedTime = DateTime.Now;
             
@@ -290,15 +300,20 @@ namespace PoGo.NecroBot.Logic
             return runningAccount;
         }
 
+        private bool switchAccountRequest = false;
         public void SwitchAccountTo(BotAccount account)
         {
             this.requestedAccount = account;
+            this.switchAccountRequest = true;
         }
 
         public void ThrowIfSwitchAccountRequested()
         {
-            if (this.requestedAccount != null && !this.requestedAccount.IsRunning)
+            if (switchAccountRequest && this.requestedAccount != null && !this.requestedAccount.IsRunning)
+            {
+                switchAccountRequest = false;
                 throw new ActiveSwitchAccountManualException(this.requestedAccount);
+            }
         }
 
         private BotAccount requestedAccount = null;
