@@ -34,7 +34,7 @@ namespace PoGo.NecroBot.Logic.State
         {
             // cancellationToken.ThrowIfCancellationRequested();
             session.EventDispatcher.Send(new LoginEvent(
-                session.Settings.AuthType, $"{session.Settings.GoogleUsername}{session.Settings.PtcUsername}"
+                session.Settings.AuthType, $"{session.Settings.Username}"
                 ));
 
             //session.EventDispatcher.Send(new NoticeEvent
@@ -42,12 +42,15 @@ namespace PoGo.NecroBot.Logic.State
             //    Message = session.Translation.GetTranslation(TranslationString.LoggingIn, session.Settings.AuthType)
             //});
 
-            await CheckLogin(session, cancellationToken);
+            CheckLogin(session, cancellationToken);
+
+            bool successfullyLoggedIn = false;
             try
             {
                 if (session.Settings.AuthType == AuthType.Google || session.Settings.AuthType == AuthType.Ptc)
                 {
                     session.Profile = await session.Client.Login.DoLogin();
+                    successfullyLoggedIn = true;
                 }
                 else
                 {
@@ -90,6 +93,10 @@ namespace PoGo.NecroBot.Logic.State
                     Message = session.Translation.GetTranslation(TranslationString.TryingAgainIn, 20)
                 });
             }
+            catch(PtcLoginException ex)
+            {
+                throw ex;
+            }
             catch (AccountNotVerifiedException ex)
             {
                 session.EventDispatcher.Send(new ErrorEvent
@@ -104,6 +111,7 @@ namespace PoGo.NecroBot.Logic.State
 
                 session.EventDispatcher.Send(new ErrorEvent
                 {
+                    RequireExit = true,
                     Message =  e.Message
 
                 });
@@ -143,6 +151,7 @@ namespace PoGo.NecroBot.Logic.State
                 }
                 session.EventDispatcher.Send(new ErrorEvent
                 {
+                    RequireExit = true,
                     Message = session.Translation.GetTranslation(TranslationString.GoogleError)
                 });
                 await Task.Delay(2000, cancellationToken);
@@ -159,6 +168,7 @@ namespace PoGo.NecroBot.Logic.State
             {
                 session.EventDispatcher.Send(new ErrorEvent
                 {
+                    RequireExit =true,
                     Message = session.Translation.GetTranslation(TranslationString.IPBannedError)
                 });
                 await Task.Delay(2000, cancellationToken);
@@ -176,8 +186,8 @@ namespace PoGo.NecroBot.Logic.State
                             ex.MinimumClientVersion.ToString()
                         )
                 });
+                session.EventDispatcher.Send(new ErrorEvent() { RequireExit = true, Message = session.Translation.GetTranslation(TranslationString.ExitNowAfterEnterKey, LogLevel.Error) });
 
-                Logger.Write(session.Translation.GetTranslation(TranslationString.ExitNowAfterEnterKey, LogLevel.Error));
                 Console.ReadKey();
                 Environment.Exit(1);
             }
@@ -190,6 +200,16 @@ namespace PoGo.NecroBot.Logic.State
                 Logger.Write(e.ToString());
                 await Task.Delay(20000, cancellationToken);
                 return this;
+            }
+            finally
+            {
+                var accountManager = TinyIoCContainer.Current.Resolve<MultiAccountManager>();
+                var currentAccount = accountManager?.GetCurrentAccount();
+                if (currentAccount != null)
+                {
+                    currentAccount.LastLogin = successfullyLoggedIn ? "Success" : "Failure";
+                    accountManager.UpdateDatabase(currentAccount);
+                }
             }
             try
             {
@@ -213,8 +233,10 @@ namespace PoGo.NecroBot.Logic.State
 
                     if (totalPercent > 100)
                     {
-                        Logger.Write(session.Translation.GetTranslation(TranslationString.TotalRecyclePercentGreaterThan100), LogLevel.Error);
+
+                        session.EventDispatcher.Send(new ErrorEvent() { RequireExit = true, Message = session.Translation.GetTranslation(TranslationString.TotalRecyclePercentGreaterThan100) });
                         Logger.Write("Press any key to exit, then fix your configuration and run the bot again.", LogLevel.Warning);
+
                         Console.ReadKey();
                         Environment.Exit(1);
                     }
@@ -236,7 +258,8 @@ namespace PoGo.NecroBot.Logic.State
 
                     if (maxTheoreticalItems > session.Profile.PlayerData.MaxItemStorage)
                     {
-                        Logger.Write(session.Translation.GetTranslation(TranslationString.MaxItemsCombinedOverMaxItemStorage, maxTheoreticalItems, session.Profile.PlayerData.MaxItemStorage), LogLevel.Error);
+                        session.EventDispatcher.Send(new ErrorEvent() { RequireExit = true, Message = session.Translation.GetTranslation(TranslationString.MaxItemsCombinedOverMaxItemStorage, maxTheoreticalItems, session.Profile.PlayerData.MaxItemStorage) });
+
                         Logger.Write("Press any key to exit, then fix your configuration and run the bot again.", LogLevel.Warning);
                         Console.ReadKey();
                         Environment.Exit(1);
@@ -275,28 +298,18 @@ namespace PoGo.NecroBot.Logic.State
             return new LoadSaveState();
         }
 
-        private static async Task CheckLogin(ISession session, CancellationToken cancellationToken)
+        private static void CheckLogin(ISession session, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (session.Settings.AuthType == AuthType.Google &&
-                (session.Settings.GoogleUsername == null || session.Settings.GooglePassword == null))
+            if (session.Settings.Username == null || session.Settings.Password == null)
             {
                 session.EventDispatcher.Send(new ErrorEvent
                 {
-                    Message = session.Translation.GetTranslation(TranslationString.MissingCredentialsGoogle)
+                    RequireExit = true,
+                    Message = session.Translation.GetTranslation(TranslationString.MissingCredentials)
                 });
-                await Task.Delay(2000, cancellationToken);
-                Environment.Exit(0);
-            }
-            else if (session.Settings.AuthType == AuthType.Ptc &&
-                     (session.Settings.PtcUsername == null || session.Settings.PtcPassword == null))
-            {
-                session.EventDispatcher.Send(new ErrorEvent
-                {
-                    Message = session.Translation.GetTranslation(TranslationString.MissingCredentialsPtc)
-                });
-                await Task.Delay(2000, cancellationToken);
+                Console.Read();
                 Environment.Exit(0);
             }
         }
