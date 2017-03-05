@@ -720,6 +720,7 @@ namespace PoGo.NecroBot.Logic
             }
             else
             {
+                bool canEvolve = false;
                 // Check requirements for all branches, if we meet the requirements for any of them then we return true.
                 foreach (var branch in settings.EvolutionBranch)
                 {
@@ -734,10 +735,10 @@ namespace PoGo.NecroBot.Logic
                     if (familyCandy < branch.CandyCost)
                         continue;  // Cannot evolve so check next branch
 
-
                     // If we got here, then we can evolve so break out of loop.
-                    break;
+                    canEvolve = true;
                 }
+                return canEvolve;
             }
 
             return true;
